@@ -14,5 +14,5 @@ id Int @default(autoincrement()) @id
 title String
 author String
 genre String
-published_year Int
+published_year String
 }
