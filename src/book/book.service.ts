@@ -1,7 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
-import { PrismaClient } from '@prisma/client';
 import { DatabaseService } from 'src/database/database.service';
 
 @Injectable()
@@ -9,8 +14,12 @@ export class BookService {
   constructor(private readonly db: DatabaseService) {}
 
   async create(createBookDto: CreateBookDto) {
-    await this.db.book.create({ data: createBookDto });
-    return 'This action adds a new book';
+    try {
+      const book = await this.db.book.create({ data: createBookDto });
+      return book;
+    } catch (error) {
+      throw new ForbiddenException('Something went wrong');
+    }
   }
 
   async findAll() {
@@ -18,15 +27,33 @@ export class BookService {
     return books;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} book`;
+  async findOne(id: number) {
+    const book = await this.db.book.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    if (!book) {
+      throw new NotFoundException('book not found');
+    }
+    return book;
   }
 
-  update(id: number, updateBookDto: UpdateBookDto) {
-    return `This action updates a #${id} book`;
+  async update(id: number, updateBookDto: UpdateBookDto) {
+    await this.findOne(id);
+
+    await this.db.book.update({
+      where: {
+        id,
+      },
+      data: updateBookDto,
+    });
+    return `The book updated successfully`;
   }
 
   async remove(id: number) {
+    await this.findOne(id);
     return await this.db.book.delete({
       where: {
         id: id,

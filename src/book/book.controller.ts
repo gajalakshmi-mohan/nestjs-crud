@@ -1,15 +1,33 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Req,
+  Res,
+  HttpCode,
+  HttpStatus,
+  UseGuards,
+} from '@nestjs/common';
 import { BookService } from './book.service';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
+import type { Request, Response } from 'express';
+import { AuthenticationGuard } from 'src/authentication/authentication.guard';
 
 @Controller('book')
+@UseGuards(AuthenticationGuard)
 export class BookController {
-  constructor(private readonly bookService: BookService) {}
+  constructor(private readonly bookService: BookService) {} //Dependency Injection
 
-  @Post()
+  @Post() // Decorator
+  @HttpCode(HttpStatus.CREATED)
   create(@Body() createBookDto: CreateBookDto) {
-    return this.bookService.create(createBookDto);
+    const book = this.bookService.create(createBookDto);
+    return book;
   }
 
   @Get()
